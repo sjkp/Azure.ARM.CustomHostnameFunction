@@ -1,0 +1,190 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_ZRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+        "description": "Storage Account type"
+      }
+    },
+    "servicePlanSKU": {
+      "type": "string",
+      "allowedValues": [
+        "Free",
+        "Shared",
+        "Basic",
+        "Standard"
+      ],
+      "defaultValue": "Basic"
+    },
+    "servicePlanWorkerSize": {
+      "type": "string",
+      "allowedValues": [
+        "0",
+        "1",
+        "2"
+      ],
+      "defaultValue": "0"
+    },
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "sjkptestfunction"
+    }
+  },
+  "variables": {
+    "webAppName": "sjkpfunwithfunctions",
+    "servicePlanName": "[concat('servicePlan', uniqueString(resourceGroup().id))]",
+    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[parameters('storageAccountType')]"
+      }
+    },
+    {
+      "name": "[variables('servicePlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-06-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "servicePlan"
+      },
+      "properties": {
+        "name": "[variables('servicePlanName')]",
+        "sku": "[parameters('servicePlanSKU')]",
+        "workerSize": "[parameters('servicePlanWorkerSize')]",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "name": "[variables('webAppName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', variables('servicePlanName')))]": "Resource",
+        "displayName": "webApp"
+      },
+      "properties": {
+        "name": "[variables('webAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "reverseproxy",
+          "type": "siteextensions",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
+          ]
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "name": "appsettings",
+          "type": "config",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
+          ],
+          "properties": {
+            "test": "not-used"
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "type": "hostNameBindings",
+          "name": "functions.sjkp.dk",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('webAppName'))]"
+          ],
+          "tags": {
+            "displayName": "hostNameBinding"
+          },
+          "properties": {
+            "domainId": null,
+            "hostNameType": "Verified",
+            "siteName": "variables('webAppName')"
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "type": "Microsoft.Web/sites",
+      "name": "[parameters('functionAppName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "functionapp",
+      "properties": {
+        "name": "[parameters('functionAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "resources": [
+        {
+          "apiVersion": "2016-03-01",
+          "name": "appsettings",
+          "type": "config",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ],
+          "properties": {
+            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]",
+            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]",
+            "FUNCTIONS_EXTENSION_VERSION": "latest"
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "name": "TestFunction",
+          "type": "functions",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+          ],
+          "properties": {
+            "config": {
+              "bindings": [
+                {
+                  "authLevel": "anonymous",
+                  "name": "req",
+                  "type": "httpTrigger",
+                  "direction": "in"
+                },
+                {
+                  "name": "res",
+                  "type": "http",
+                  "direction": "out"
+                }
+              ]
+            },
+            "files": {
+              "run.csx": "using System.Net;\r\npublic static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceWriter log)\r\n{\r\n    log.Info($\"C# HTTP trigger function processed a request. RequestUri={req.RequestUri}\");\r\n\r\n    // parse query parameter\r\n    string name = req.GetQueryNameValuePairs()\r\n        .FirstOrDefault(q => string.Compare(q.Key, \"name\", true) == 0)\r\n        .Value;\r\n\r\n    // Get request body\r\n    dynamic data = await req.Content.ReadAsAsync<object>();\r\n\r\n    // Set name to query string or body data\r\n    name = name ?? data?.name;\r\n\r\n    return name == null\r\n        ? req.CreateResponse(HttpStatusCode.BadRequest, \"Please pass a name on the query string or in the request body\")\r\n        : req.CreateResponse(HttpStatusCode.OK, \"Hello \" + name);\r\n}"
+
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}

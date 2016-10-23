@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "Azure.ARM.CustomHostnameFunction", "Azure.ARM.CustomHostnameFunction\Azure.ARM.CustomHostnameFunction.deployproj", "{7163CCA6-E801-47A6-BD10-026C5C40B789}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.ARM.CustomHostnameFunction.WebApp", "Azure.ARM.CustomHostnameFunction.WebApp\Azure.ARM.CustomHostnameFunction.WebApp.csproj", "{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7163CCA6-E801-47A6-BD10-026C5C40B789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7163CCA6-E801-47A6-BD10-026C5C40B789}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7163CCA6-E801-47A6-BD10-026C5C40B789}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7163CCA6-E801-47A6-BD10-026C5C40B789}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
