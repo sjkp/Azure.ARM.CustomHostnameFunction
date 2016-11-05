@@ -37,12 +37,24 @@
     "functionAppName": {
       "type": "string",
       "defaultValue": "sjkptestfunction"
+    },
+    "webAppName": {
+      "type": "string",
+      "defaultValue": "sjkpfunwithfunctions"
+    },
+    "webAppDomainName": {
+      "type": "string",
+      "defaultValue": "functions.sjkp.dk"
+    },
+    "functionAppDomainName": {
+      "type": "string",
+      "defaultValue": "myfunc.sjkp.dk"
     }
   },
   "variables": {
-    "webAppName": "sjkpfunwithfunctions",
     "servicePlanName": "[concat('servicePlan', uniqueString(resourceGroup().id))]",
-    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]"
+    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
+    "dynamicAppServicePlanName": "[concat('dynamic', uniqueString(resourceGroup().id))]"
   },
   "resources": [
     {
@@ -55,11 +67,22 @@
       }
     },
     {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2015-04-01",
+      "name": "[variables('dynamicAppServicePlanName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('dynamicAppServicePlanName')]",
+        "computeMode": "Dynamic",
+        "sku": "Dynamic"
+      }
+    },
+    {
       "name": "[variables('servicePlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[resourceGroup().location]",
       "apiVersion": "2014-06-01",
-      "dependsOn": [],
+      "dependsOn": [ "[resourceId('Microsoft.Web/serverfarms', variables('dynamicAppServicePlanName'))]" ],
       "tags": {
         "displayName": "servicePlan"
       },
@@ -71,7 +94,7 @@
       }
     },
     {
-      "name": "[variables('webAppName')]",
+      "name": "[parameters('webAppName')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-08-01",
@@ -83,7 +106,7 @@
         "displayName": "webApp"
       },
       "properties": {
-        "name": "[variables('webAppName')]",
+        "name": "[parameters('webAppName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
       },
       "resources": [
@@ -92,7 +115,7 @@
           "name": "reverseproxy",
           "type": "siteextensions",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
+            "[resourceId('Microsoft.Web/Sites', parameters('webAppName'))]"
           ]
         },
         {
@@ -100,7 +123,7 @@
           "name": "appsettings",
           "type": "config",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
+            "[resourceId('Microsoft.Web/Sites', parameters('webAppName'))]"
           ],
           "properties": {
             "test": "not-used"
@@ -109,9 +132,9 @@
         {
           "apiVersion": "2015-08-01",
           "type": "hostNameBindings",
-          "name": "functions.sjkp.dk",
+          "name": "[parameters('webAppDomainName')]",
           "dependsOn": [
-            "[concat('Microsoft.Web/sites/', variables('webAppName'))]"
+            "[concat('Microsoft.Web/sites/', parameters('webAppName'))]"
           ],
           "tags": {
             "displayName": "hostNameBinding"
@@ -132,13 +155,29 @@
       "kind": "functionapp",
       "properties": {
         "name": "[parameters('functionAppName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('dynamicAppServicePlanName'))]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('servicePlanName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('dynamicAppServicePlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "type": "hostNameBindings",
+          "name": "[parameters('functionAppDomainName')]",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', parameters('functionAppName'))]"
+          ],
+          "tags": {
+            "displayName": "hostNameBinding"
+          },
+          "properties": {
+            "domainId": null,
+            "hostNameType": "Verified",
+            "siteName": "variables('webAppName')"
+          }
+        },
         {
           "apiVersion": "2016-03-01",
           "name": "appsettings",

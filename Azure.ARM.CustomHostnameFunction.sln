@@ -7,6 +7,11 @@ Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "Azure.ARM.CustomHostnameFun
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.ARM.CustomHostnameFunction.WebApp", "Azure.ARM.CustomHostnameFunction.WebApp\Azure.ARM.CustomHostnameFunction.WebApp.csproj", "{F7BB5A0C-A35C-491F-8CCD-7484831DB6B6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ABD8A67D-B0E1-45E2-B3B7-D8037AF2692F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

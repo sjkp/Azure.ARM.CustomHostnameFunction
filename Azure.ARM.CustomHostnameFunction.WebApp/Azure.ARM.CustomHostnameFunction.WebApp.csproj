@@ -67,6 +67,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+    <Content Include="applicationHost.xdt" />
+    <None Include="Properties\PublishProfiles\sjkpfunwithfunctions - Web Deploy %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\sjkpfunwithfunctions - Web Deploy %283%29.pubxml" />
+    <None Include="Properties\PublishProfiles\sjkpfunwithfunctions - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\sjkptestfunction - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\test.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -83,6 +88,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="api\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
